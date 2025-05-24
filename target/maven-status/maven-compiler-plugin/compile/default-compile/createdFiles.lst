@@ -1,0 +1,5 @@
+com\svalero\spacex\App.class
+com\svalero\spacex\controller\SpaceXController.class
+com\svalero\spacex\network\RetrofitClient.class
+com\svalero\spacex\model\Launch.class
+com\svalero\spacex\network\SpaceXApi.class
