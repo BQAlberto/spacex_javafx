@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -35,6 +36,9 @@
                 </columns>
             </TableView>
 
+            <Label text="Imagen del escudo"/>
+            <ImageView fx:id="launchImage" fitWidth="200" preserveRatio="true"/>
+
             <!-- Tabla de cohetes -->
             <Label text="Cohetes SpaceX"/>
             <TextField fx:id="rocketSearchField" promptText="Buscar cohete..." />
@@ -44,6 +48,9 @@
                     <TableColumn fx:id="firstFlightColumn" text="Primer vuelo" prefWidth="200.0"/>
                 </columns>
             </TableView>
+
+            <Button text="Exportar cohetes a ZIP" onAction="#exportRocketsToZip"/>
+
         </VBox>
     </center>
 

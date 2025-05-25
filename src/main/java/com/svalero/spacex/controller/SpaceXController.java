@@ -10,8 +10,23 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import java.io.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
 
 public class SpaceXController {
 
@@ -47,6 +62,10 @@ public class SpaceXController {
     private FilteredList<Rocket> filteredRockets;
 
     @FXML
+    private ImageView launchImage;
+
+
+    @FXML
     public void initialize() {
         nameColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getName()));
         dateColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getDate_utc()));
@@ -65,6 +84,19 @@ public class SpaceXController {
 
         loadLaunches();
         loadRockets();
+
+        launchTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.getLinks() != null && newVal.getLinks().getPatch() != null) {
+                String imageUrl = newVal.getLinks().getPatch().getSmall();
+                if (imageUrl != null && !imageUrl.isEmpty()) {
+                    Image image = new Image(imageUrl, true); // true = carga en background
+                    launchImage.setImage(image);
+                } else {
+                    launchImage.setImage(null);
+                }
+            }
+        });
+
     }
 
     @FXML
@@ -105,6 +137,51 @@ public class SpaceXController {
                         alert.showAndWait();
                     })
                 );
+    }
+
+    @FXML
+    public void exportRocketsToZip() {
+        CompletableFuture.runAsync(() -> {
+            try {
+                // 1. Exportar a CSV
+                File csvFile = new File("rockets.csv");
+                try (PrintWriter writer = new PrintWriter(csvFile)) {
+                    writer.println("Nombre,Primer Vuelo");
+                    for (Rocket rocket : rocketList) {
+                        writer.printf("%s,%s%n", rocket.getName(), rocket.getFirst_flight());
+                    }
+                }
+
+                // 2. Comprimir en ZIP
+                File zipFile = new File("rockets.zip");
+                try (FileOutputStream fos = new FileOutputStream(zipFile);
+                    ZipOutputStream zos = new ZipOutputStream(fos);
+                    FileInputStream fis = new FileInputStream(csvFile)) {
+
+                    ZipEntry entry = new ZipEntry(csvFile.getName());
+                    zos.putNextEntry(entry);
+
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = fis.read(buffer)) > 0) {
+                        zos.write(buffer, 0, length);
+                    }
+                    zos.closeEntry();
+                }
+
+                // 3. Notificación en la interfaz
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Exportación completada: rockets.zip");
+                    alert.showAndWait();
+                });
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Error al exportar: " + e.getMessage());
+                    alert.showAndWait();
+                });
+            }
+        });
     }
 
 }
